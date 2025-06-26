@@ -6,8 +6,8 @@
 
 // กำหนดค่าคงที่
 #define ONE_WIRE_BUS 2  // ขา GPIO2 (D4)
-const char* ssid = "SEVENTHREEHOME";
-const char* password = "08965412";
+const char* ssid = "IOT-AEP_WIFI";
+const char* password = "aepthailand1";
 
 // ตั้งค่า Server
 const char* serverHost = "150.95.30.116"; 
@@ -23,7 +23,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 WiFiClient client;
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 30000; // ส่งข้อมูลทุก 30 วินาที
+const unsigned long sendInterval = 60000; // ส่งข้อมูลทุก 30 วินาที
 
 void setup() {
   Serial.begin(115200);
@@ -91,9 +91,9 @@ void sendToDatabase(float temperature) {
 
   // สร้าง JSON data
   StaticJsonDocument<256> doc;
-  doc["device"] = "DS18B20_Sensor_1";
+  doc["device"] = "DS18B20_Sensor_2";
   doc["value"] = temperature;
-  doc["branch"] = "Site_1";
+  doc["branch"] = "Site_2";
   doc["mac"] = WiFi.macAddress();
   doc["sn"] = ESP.getChipId();
   
