@@ -59,6 +59,13 @@ func getGroupID(customerCode string) (string, error) {
 // pushMessage ส่งข้อความเข้า LINE group
 func pushMessage(groupID, message string) error {
 	_, err := bot.PushMessage(groupID, linebot.NewTextMessage(message)).Do()
+	if err != nil {
+		if apiErr, ok := err.(*linebot.APIError); ok {
+			fmt.Printf("LINE API error: Code %d, Message: %s, Details: %+v\n", apiErr.Code, apiErr.Response.Message, apiErr.Response.Details)
+		} else {
+			fmt.Printf("LINE API error: %v\n", err)
+		}
+	}
 	return err
 }
 
