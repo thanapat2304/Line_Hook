@@ -120,39 +120,9 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "missing customer label"})
 			return
 		}
-
-		// สร้างข้อความจากหลายแหล่งข้อมูล
-		var message string
-
 		annotations, _ := firstAlert["annotations"].(map[string]interface{})
-		if summary, ok := annotations["summary"].(string); ok && summary != "" {
-			message = fmt.Sprintf("[ALERT] %s", summary)
-		} else {
-			if values, ok := firstAlert["values"].(map[string]interface{}); ok {
-				fmt.Printf("values: %+v\n", values)
-				bValue := values["B"]
-				fmt.Printf("values[\"B\"]: %+v, type: %T\n", bValue, bValue)
-				switch v := bValue.(type) {
-				case float64:
-					message = fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", v)
-				case string:
-					message = fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %s องศา", v)
-				default:
-					message = "[ALERT] Unknown value"
-				}
-			} else {
-				message = "[ALERT] Unknown alert"
-			}
-		}
-		fmt.Printf("Message after custom: %s\n", message)
-
-		// เพิ่มข้อมูลเพิ่มเติมถ้ามี
-		if valueString, ok := firstAlert["valueString"].(string); ok && valueString != "" {
-			message += fmt.Sprintf("\nValues: %s", valueString)
-		}
-
-		fmt.Printf("Customer Code: %s\n", customerCode)
-		fmt.Printf("Final Message: %s\n", message)
+		summary, _ := annotations["summary"].(string)
+		message := fmt.Sprintf("[ALERT] %s", summary)
 
 		groupID, err := getGroupID(customerCode)
 		if err != nil {
