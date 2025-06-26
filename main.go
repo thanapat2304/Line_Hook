@@ -93,13 +93,14 @@ func main() {
 		var req struct {
 			CustomerCode string  `json:"customer_code"`
 			TempValue    float64 `json:"temp_value"`
+			Status       string  `json:"status"`
 		}
 		if err := c.BindJSON(&req); err != nil {
 			fmt.Printf("BIND ERROR: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid json"})
 			return
 		}
-		fmt.Printf("IOT ALERT: customer_code=%s, temp=%.2f\n", req.CustomerCode, req.TempValue)
+		fmt.Printf("IOT ALERT: customer_code=%s, temp=%.2f, status=%s\n", req.CustomerCode, req.TempValue, req.Status)
 
 		groupID, err := getGroupID(req.CustomerCode)
 		if err != nil {
@@ -109,7 +110,7 @@ func main() {
 		}
 
 		fmt.Printf("DEBUG: groupID=%s\n", groupID)
-		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", req.TempValue)
+		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิ%s %.1f องศา", req.Status, req.TempValue)
 		fmt.Printf("DEBUG: message=%s\n", message)
 		err = pushMessage(groupID, message)
 		if err != nil {

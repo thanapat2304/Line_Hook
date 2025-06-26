@@ -23,7 +23,12 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 WiFiClient client;
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 60000; // ส่งข้อมูลทุก 30 วินาที
+const unsigned long sendInterval = 60000; // ส่งข้อมูลทุก 1 นาที
+
+// เพิ่มตัวแปรสำหรับ LINE ALERT
+unsigned long lastLineAlertTime = 0;
+const unsigned long lineAlertInterval = 600000; // 10 นาที (600,000 ms)
+bool isTempAbnormal = false;
 
 void setup() {
   Serial.begin(115200);
@@ -50,11 +55,25 @@ void loop() {
   if (tempC != DEVICE_DISCONNECTED_C) {
     Serial.printf("อุณหภูมิ: %.1f °C\n", tempC);
     
-    // ส่งข้อมูลไปยังเซิร์ฟเวอร์ตามช่วงเวลา
+    // ส่งข้อมูลไปยังเซิร์ฟเวอร์ตามช่วงเวลา (1 นาที)
     if (millis() - lastSendTime >= sendInterval) {
       sendToDatabase(tempC);      // ส่งไปฐานข้อมูล (port 8070)
-      sendToLineAlert(tempC);   // ส่งแจ้งเตือนไป LINE เฉพาะเมื่ออยู่นอกช่วง 20-25 องศา
       lastSendTime = millis();
+    }
+
+    // เช็คช่วงอุณหภูมิผิดปกติ (นอก 20-25)
+    bool tempAbnormalNow = (tempC < 20.0 || tempC > 25.0);
+    unsigned long now = millis();
+    if (tempAbnormalNow) {
+      if (!isTempAbnormal || (now - lastLineAlertTime >= lineAlertInterval)) {
+        sendToLineAlert(tempC); // ส่งแจ้งเตือน
+        lastLineAlertTime = now;
+        isTempAbnormal = true;
+      }
+      // ถ้ายังผิดปกติแต่ยังไม่ครบ 10 นาที จะไม่ส่งซ้ำ
+    } else {
+      // ถ้ากลับมาปกติ รีเซ็ตสถานะ
+      isTempAbnormal = false;
     }
   } else {
     Serial.println("เกิดข้อผิดพลาดในการอ่านเซ็นเซอร์");
@@ -138,6 +157,14 @@ void sendToLineAlert(float temperature) {
   StaticJsonDocument<128> doc;
   doc["customer_code"] = customerCode;
   doc["temp_value"] = temperature;
+  // เพิ่มสถานะสูง/ต่ำกว่าเกณฑ์
+  if (temperature > 25.0) {
+    doc["status"] = "สูงกว่าเกณฑ์";
+  } else if (temperature < 20.0) {
+    doc["status"] = "ต่ำกว่าเกณฑ์";
+  } else {
+    doc["status"] = "ปกติ";
+  }
   String jsonData;
   serializeJson(doc, jsonData);
 
