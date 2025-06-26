@@ -1,4 +1,4 @@
-module groupid
+module lineiot
 
 go 1.24.3
 

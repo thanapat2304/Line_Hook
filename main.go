@@ -108,9 +108,12 @@ func main() {
 			return
 		}
 
+		fmt.Printf("groupID ที่จะส่ง: %s\n", groupID)
+
 		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", req.TempValue)
 		err = pushMessage(groupID, message)
 		if err != nil {
+			fmt.Printf("pushMessage error: %v\n", err)
 			fmt.Println("==== FAILED TO SEND MESSAGE ====")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
 			return

@@ -53,7 +53,9 @@ void loop() {
     // ส่งข้อมูลไปยังเซิร์ฟเวอร์ตามช่วงเวลา
     if (millis() - lastSendTime >= sendInterval) {
       sendToDatabase(tempC);      // ส่งไปฐานข้อมูล (port 8070)
-      sendToLineAlert(tempC);     // ส่งแจ้งเตือนไป LINE (port 8071)
+      if (tempC < 20.0 || tempC > 25.0) {
+        sendToLineAlert(tempC);   // ส่งแจ้งเตือนไป LINE เฉพาะเมื่ออยู่นอกช่วง 20-25 องศา
+      }
       lastSendTime = millis();
     }
   } else {
