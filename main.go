@@ -124,21 +124,19 @@ func main() {
 		// สร้างข้อความจากหลายแหล่งข้อมูล
 		var message string
 
-		// ลองดึงจาก annotations.summary ก่อน
 		annotations, _ := firstAlert["annotations"].(map[string]interface{})
 		if summary, ok := annotations["summary"].(string); ok && summary != "" {
 			message = fmt.Sprintf("[ALERT] %s", summary)
 		} else {
-			// ถ้าไม่มี summary ให้ใช้ title จาก alertData
-			if title, ok := alertData["title"].(string); ok && title != "" {
-				message = fmt.Sprintf("[ALERT] %s", title)
-			} else {
-				// ถ้าไม่มี title ให้ใช้ alertname จาก labels
-				if alertname, ok := labels["alertname"].(string); ok {
-					message = fmt.Sprintf("[ALERT] %s", alertname)
+			// ถ้าไม่มี summary ให้ custom ข้อความเอง (สมมติ var 'B' คืออุณหภูมิ)
+			if values, ok := firstAlert["values"].(map[string]interface{}); ok {
+				if temp, ok := values["B"].(float64); ok {
+					message = fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", temp)
 				} else {
-					message = "[ALERT] Unknown alert"
+					message = "[ALERT] Unknown value"
 				}
+			} else {
+				message = "[ALERT] Unknown alert"
 			}
 		}
 
