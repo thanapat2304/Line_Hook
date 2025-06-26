@@ -130,6 +130,8 @@ func main() {
 		} else {
 			// ถ้าไม่มี summary ให้ custom ข้อความเอง (สมมติ var 'B' คืออุณหภูมิ)
 			if values, ok := firstAlert["values"].(map[string]interface{}); ok {
+				fmt.Printf("values: %+v\n", values)
+				fmt.Printf("values[\"B\"]: %+v, type: %T\n", values["B"], values["B"])
 				if temp, ok := values["B"].(float64); ok {
 					message = fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", temp)
 				} else {
@@ -139,6 +141,7 @@ func main() {
 				message = "[ALERT] Unknown alert"
 			}
 		}
+		fmt.Printf("Message after custom: %s\n", message)
 
 		// เพิ่มข้อมูลเพิ่มเติมถ้ามี
 		if valueString, ok := firstAlert["valueString"].(string); ok && valueString != "" {
