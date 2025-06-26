@@ -152,11 +152,6 @@ func main() {
 		}
 		fmt.Printf("Message after custom: %s\n", message)
 
-		// เพิ่มข้อมูลเพิ่มเติมถ้ามี
-		if valueString, ok := firstAlert["valueString"].(string); ok && valueString != "" {
-			message += fmt.Sprintf("\nValues: %s", valueString)
-		}
-
 		fmt.Printf("Customer Code: %s\n", customerCode)
 		fmt.Printf("Final Message: %s\n", message)
 
