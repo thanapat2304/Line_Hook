@@ -59,13 +59,6 @@ func getGroupID(customerCode string) (string, error) {
 // pushMessage ส่งข้อความเข้า LINE group
 func pushMessage(groupID, message string) error {
 	_, err := bot.PushMessage(groupID, linebot.NewTextMessage(message)).Do()
-	if err != nil {
-		if apiErr, ok := err.(*linebot.APIError); ok {
-			fmt.Printf("LINE API error: Code %d, Message: %s, Details: %+v\n", apiErr.Code, apiErr.Response.Message, apiErr.Response.Details)
-		} else {
-			fmt.Printf("LINE API error: %v\n", err)
-		}
-	}
 	return err
 }
 
@@ -115,12 +108,9 @@ func main() {
 			return
 		}
 
-		fmt.Printf("groupID ที่จะส่ง: %s\n", groupID)
-
 		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", req.TempValue)
 		err = pushMessage(groupID, message)
 		if err != nil {
-			fmt.Printf("pushMessage error: %v\n", err)
 			fmt.Println("==== FAILED TO SEND MESSAGE ====")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
 			return
