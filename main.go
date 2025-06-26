@@ -94,6 +94,7 @@ func main() {
 			CustomerCode string  `json:"customer_code"`
 			TempValue    float64 `json:"temp_value"`
 			Status       string  `json:"status"`
+			Device       string  `json:"device"`
 		}
 		if err := c.BindJSON(&req); err != nil {
 			fmt.Printf("BIND ERROR: %v\n", err)
@@ -110,7 +111,12 @@ func main() {
 		}
 
 		fmt.Printf("DEBUG: groupID=%s\n", groupID)
-		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิ%s %.1f องศา", req.Status, req.TempValue)
+		var message string
+		if req.Status == "เซนเซอร์พัง" {
+			message = fmt.Sprintf("%s: แจ้งเตือน: เซนเซอร์อุณหภูมิขัดข้อง กรุณาตรวจสอบอุปกรณ์", req.Device)
+		} else {
+			message = fmt.Sprintf("%s: ฉุกเฉินอุณหภูมิ%s %.1f องศา", req.Device, req.Status, req.TempValue)
+		}
 		fmt.Printf("DEBUG: message=%s\n", message)
 		err = pushMessage(groupID, message)
 		if err != nil {

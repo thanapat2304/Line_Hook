@@ -29,6 +29,7 @@ const unsigned long sendInterval = 60000; // ส่งข้อมูลทุ�
 unsigned long lastLineAlertTime = 0;
 const unsigned long lineAlertInterval = 600000; // 10 นาที (600,000 ms)
 bool isTempAbnormal = false;
+bool sensorErrorNotified = false;
 
 void setup() {
   Serial.begin(115200);
@@ -75,8 +76,20 @@ void loop() {
       // ถ้ากลับมาปกติ รีเซ็ตสถานะ
       isTempAbnormal = false;
     }
+    // ถ้าเซนเซอร์กลับมาทำงาน รีเซ็ตสถานะ sensorErrorNotified
+    sensorErrorNotified = false;
   } else {
     Serial.println("เกิดข้อผิดพลาดในการอ่านเซ็นเซอร์");
+    // ส่ง 999 ไปฐานข้อมูลทุก 1 นาที
+    if (millis() - lastSendTime >= sendInterval) {
+      sendToDatabase(999);
+      lastSendTime = millis();
+    }
+    // แจ้งเตือนไป LINE ว่าเซนเซอร์พัง (ครั้งเดียวจนกว่าจะกลับมาปกติ)
+    if (!sensorErrorNotified) {
+      sendSensorErrorToLine();
+      sensorErrorNotified = true;
+    }
   }
   
   delay(2000); // หน่วงเวลา 2 วินาที
@@ -165,6 +178,7 @@ void sendToLineAlert(float temperature) {
   } else {
     doc["status"] = "ปกติ";
   }
+  doc["device"] = "DS18B20_Sensor_2";
   String jsonData;
   serializeJson(doc, jsonData);
 
@@ -190,6 +204,44 @@ void sendToLineAlert(float temperature) {
     }
     lineClient.stop();
     Serial.println("ส่งแจ้งเตือนไป LINE สำเร็จ");
+  } else {
+    Serial.println("การเชื่อมต่อเซิร์ฟเวอร์ LINE ล้มเหลว");
+  }
+}
+
+// เพิ่มฟังก์ชันแจ้งเตือนเซนเซอร์พัง
+void sendSensorErrorToLine() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("ไม่สามารถส่งแจ้งเตือนไป LINE ได้ - WiFi ยังไม่เชื่อมต่อ");
+    return;
+  }
+  WiFiClient lineClient;
+  StaticJsonDocument<128> doc;
+  doc["customer_code"] = customerCode;
+  doc["temp_value"] = 999;
+  doc["status"] = "เซนเซอร์พัง";
+  doc["device"] = "DS18B20_Sensor_2";
+  String jsonData;
+  serializeJson(doc, jsonData);
+  Serial.println("กำลังส่งแจ้งเตือนเซนเซอร์พังไป LINE: " + jsonData);
+  if (lineClient.connect(lineHost, linePort)) {
+    lineClient.println("POST /iot-alert HTTP/1.1");
+    lineClient.println("Host: " + String(lineHost));
+    lineClient.println("Content-Type: application/json");
+    lineClient.println("Connection: close");
+    lineClient.print("Content-Length: ");
+    lineClient.println(jsonData.length());
+    lineClient.println();
+    lineClient.println(jsonData);
+    unsigned long timeout = millis();
+    while (lineClient.connected() && millis() - timeout < 5000) {
+      if (lineClient.available()) {
+        String line = lineClient.readStringUntil('\r');
+        Serial.println("การตอบกลับจาก LINE: " + line);
+      }
+    }
+    lineClient.stop();
+    Serial.println("ส่งแจ้งเตือนเซนเซอร์พังไป LINE สำเร็จ");
   } else {
     Serial.println("การเชื่อมต่อเซิร์ฟเวอร์ LINE ล้มเหลว");
   }
