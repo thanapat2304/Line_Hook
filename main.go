@@ -108,11 +108,13 @@ func main() {
 			return
 		}
 
+		fmt.Printf("DEBUG: groupID=%s\n", groupID)
 		message := fmt.Sprintf("ฉุกเฉินอุณหภูมิสูงกว่าค่าที่กำหนด %.1f องศา", req.TempValue)
+		fmt.Printf("DEBUG: message=%s\n", message)
 		err = pushMessage(groupID, message)
 		if err != nil {
-			fmt.Println("==== FAILED TO SEND MESSAGE ====")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
+			fmt.Printf("==== FAILED TO SEND MESSAGE: %v ====", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message", "detail": err.Error()})
 			return
 		}
 		fmt.Println("==== IOT MESSAGE SENT SUCCESSFULLY ====")
